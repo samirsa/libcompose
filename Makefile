@@ -12,6 +12,7 @@ LIBCOMPOSE_ENVS := \
 # (default to no bind mount if DOCKER_HOST is set)
 BIND_DIR := $(if $(DOCKER_HOST),,bundles)
 LIBCOMPOSE_MOUNT := $(if $(BIND_DIR),-v "$(CURDIR)/$(BIND_DIR):/go/src/github.com/docker/libcompose/$(BIND_DIR)")
+LIBCOMPOSE_MOUNT_2 := -v "$(GOPATH):/go"
 
 GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 GIT_BRANCH_CLEAN := $(shell echo $(GIT_BRANCH) | sed -e "s/[^[:alnum:]]/-/g")
@@ -19,7 +20,7 @@ LIBCOMPOSE_IMAGE := libcompose-dev$(if $(GIT_BRANCH_CLEAN),:$(GIT_BRANCH_CLEAN))
 
 DAEMON_VERSION := $(if $(DAEMON_VERSION),$(DAEMON_VERSION),"default")
 TTY := $(shell [ -t 0 ] && echo "-t")
-DOCKER_RUN_LIBCOMPOSE := docker run --rm -i $(TTY) --privileged -e DAEMON_VERSION="$(DAEMON_VERSION)" $(LIBCOMPOSE_ENVS) $(LIBCOMPOSE_MOUNT) "$(LIBCOMPOSE_IMAGE)"
+DOCKER_RUN_LIBCOMPOSE := docker run --rm -i $(TTY) --privileged -e DAEMON_VERSION="$(DAEMON_VERSION)" $(LIBCOMPOSE_ENVS) $(LIBCOMPOSE_MOUNT) $(LIBCOMPOSE_MOUNT_2) "$(LIBCOMPOSE_IMAGE)"
 
 default: binary
 

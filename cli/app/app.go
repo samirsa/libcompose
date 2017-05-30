@@ -46,7 +46,16 @@ func WithProject(factory ProjectFactory, action ProjectAction) func(context *cli
 		if err != nil {
 			logrus.Fatalf("Failed to read project: %v", err)
 		}
-		return action(p, context)
+		err = PrePlugin(p, context)
+		if err != nil {
+			logrus.Fatalf("Failure from PrePlugin: %v", err)
+		}
+		actionErr := action(p,context)
+		err = PostPlugin(p, context)
+		if err != nil {
+			logrus.Fatalf("Failure from PostPlugin: %v", err)
+		}
+		return actionErr
 	}
 }
 
@@ -95,12 +104,12 @@ func ProjectStop(p project.APIProject, c *cli.Context) error {
 
 // ProjectDown brings all services down (stops and clean containers).
 func ProjectDown(p project.APIProject, c *cli.Context) error {
-	options := options.Down{
+	opts := options.Down{
 		RemoveVolume:  c.Bool("volumes"),
 		RemoveImages:  options.ImageType(c.String("rmi")),
 		RemoveOrphans: c.Bool("remove-orphans"),
 	}
-	err := p.Down(context.Background(), options, c.Args()...)
+	err := p.Down(context.Background(), opts, c.Args()...)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -123,12 +132,12 @@ func ProjectBuild(p project.APIProject, c *cli.Context) error {
 
 // ProjectCreate creates all services but do not start them.
 func ProjectCreate(p project.APIProject, c *cli.Context) error {
-	options := options.Create{
+	opts := options.Create{
 		NoRecreate:    c.Bool("no-recreate"),
 		ForceRecreate: c.Bool("force-recreate"),
 		NoBuild:       c.Bool("no-build"),
 	}
-	err := p.Create(context.Background(), options, c.Args()...)
+	err := p.Create(context.Background(), opts, c.Args()...)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -137,7 +146,7 @@ func ProjectCreate(p project.APIProject, c *cli.Context) error {
 
 // ProjectUp brings all services up.
 func ProjectUp(p project.APIProject, c *cli.Context) error {
-	options := options.Up{
+	opts := options.Up{
 		Create: options.Create{
 			NoRecreate:    c.Bool("no-recreate"),
 			ForceRecreate: c.Bool("force-recreate"),
@@ -146,7 +155,7 @@ func ProjectUp(p project.APIProject, c *cli.Context) error {
 		},
 	}
 	ctx, cancelFun := context.WithCancel(context.Background())
-	err := p.Up(ctx, options, c.Args()...)
+	err := p.Up(ctx, opts, c.Args()...)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -187,11 +196,11 @@ func ProjectRun(p project.APIProject, c *cli.Context) error {
 	serviceName := c.Args()[0]
 	commandParts := c.Args()[1:]
 
-	options := options.Run{
+	opts := options.Run{
 		Detached: c.Bool("d"),
 	}
 
-	exitCode, err := p.Run(context.Background(), serviceName, commandParts, options)
+	exitCode, err := p.Run(context.Background(), serviceName, commandParts, opts)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -236,7 +245,7 @@ func ProjectPull(p project.APIProject, c *cli.Context) error {
 
 // ProjectDelete deletes services.
 func ProjectDelete(p project.APIProject, c *cli.Context) error {
-	options := options.Delete{
+	opts := options.Delete{
 		RemoveVolume: c.Bool("v"),
 	}
 	if !c.Bool("force") {
@@ -260,7 +269,7 @@ func ProjectDelete(p project.APIProject, c *cli.Context) error {
 			return nil
 		}
 	}
-	err := p.Delete(context.Background(), options, c.Args()...)
+	err := p.Delete(context.Background(), opts, c.Args()...)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
