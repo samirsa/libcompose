@@ -55,6 +55,7 @@ func loadOpsWithFile(fileName string) error {
 		return err
 	}
 
+	// Check if Default Network is present in the UserPolicy
 	for _, policy := range ops.UserPolicy {
 		if policy.DefaultNetwork == "" {
 			continue

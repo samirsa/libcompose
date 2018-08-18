@@ -4,8 +4,8 @@ import (
 	"errors"
 	"os"
 	log "github.com/Sirupsen/logrus"
-	"github.com/docker/libcompose/hooks/ops"
 	"github.com/docker/libcompose/project"
+	"github.com/davecgh/go-spew/spew"
 )
 
 const (
@@ -20,6 +20,8 @@ const (
 func CreateNetConfig(p *project.Project) error {
 	log.Debugf("Create network for the project '%s' ", p.Name)
 
+	scs := spew.ConfigState{Indent: "\t"}
+	scs.Dump(p.ServiceConfigs)
 	if err := validateProject(p); err != nil {
 		os.Exit(1)
 		return err
@@ -204,8 +206,9 @@ func applyLinksBasedPolicy(p *project.Project) error {
 	return nil
 }
 
-// Checks User credentials to perform a given operation (move to Authz)
+// Checks User credentials to perform a given operation (move to Authz) - Checks if the User id is same as the Network name for the project - why?
 func checkUserCreds(p *project.Project) error {
+	/*
 	userId, err := getSelfId()
 	if err != nil {
 		log.Errorf("Unable to identify self: %s", err)
@@ -217,10 +220,12 @@ func checkUserCreds(p *project.Project) error {
 		log.Errorf("User '%s' not allowed on network '%s'", userId, networkName)
 		return err
 	}
+	*/
 
 	return nil
 }
 
+// validateProject - checks that the NetworkName for the Project is exactly equal to the all the Network names for all Service Configs. Why?
 func validateProject(p *project.Project) error {
 	netName := getNetworkNameFromProject(p)
 

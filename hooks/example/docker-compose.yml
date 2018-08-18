@@ -1,0 +1,11 @@
+web:
+  image: alpine
+  ports:
+   - "5000:5000"
+  links:
+    - redis
+  labels:
+    - "attr1=a1@a.com"
+    - "attr2=b1@b.com"
+redis:
+  image: alpine

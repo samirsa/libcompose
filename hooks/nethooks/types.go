@@ -10,5 +10,5 @@ const (
 
 const (
 	TENANT_DEFAULT  = "default"
-	NETWORK_DEFAULT = "dev"
+	NETWORK_DEFAULT = "contiv-net"
 )
